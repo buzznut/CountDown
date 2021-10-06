@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <!-- Full version number to display -->
+    <?define VersionNumber="!(bind.fileVersion.CountDownApp.Exe)" ?>
+
+    <?define CountDownApp_TargetDir=$(var.CountDownApp.TargetDir)?>
+    <?define CountDownConfig_TargetDir=$(var.CountDownConfig.TargetDir)?>
+    <?define ProductName = "CountDown" ?>
+    <?define ProductAuthor = "Stewart Nutter" ?>
+    <?define ProductAppFolder = "InstallLocation" ?>
+    <?define ProductManufacturer = "BuzzNutt"?>
+    <?define Company = "BuzzNutt"?>
+    <?define ProductDescription = "Countdown Event Display."?>
+    <?define ProductDisplayName = "$(var.ProductName)" ?>
+    <?define ProductUpgradeCode = "55f1c36d-9449-48f7-b66d-2e8cffdfc4ea" ?>
+    <?define Win64 = "no" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?><?define CountDownApp_TargetDir=$(var.CountDownApp.TargetDir)?><?define CountDownConfig_TargetDir=$(var.CountDownConfig.TargetDir)?>
+
+    <Product Id="*" Name="$(var.ProductDisplayName) (v$(var.VersionNumber))" Language="1033" Version="$(var.VersionNumber)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="$(var.ProductUpgradeCode)">
+
+        <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Manufacturer="$(var.ProductManufacturer)" Id="*" />
+
+        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+        <MediaTemplate EmbedCab="yes" />
+
+        <Feature Id="ProductFeature" Title="CountDownApp" Level="1">
+            <ComponentGroupRef Id="ProductComponents" />
+            <ComponentGroupRef Id="Cleanup" />
+        </Feature>
+
+        <Upgrade Id="$(var.ProductUpgradeCode)">
+            <UpgradeVersion OnlyDetect="no" Property="PREVIOUSFOUND" Minimum="1.0.0" IncludeMinimum="yes" Maximum="3.0.0" IncludeMaximum="no" />
+        </Upgrade>
+
+        <Icon Id="icon.ico" SourceFile="$(var.CountDownApp_TargetDir)hourglass_icon.ico" />
+        <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
+        <UI>
+            <UIRef Id="WixUI_Minimal" />
+            <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+        </UI>
+
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch $(var.ProductName)" />
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+        <!-- Include the custom action -->
+        <Property Id="WixShellExecTarget" Value="[#CountDownApp.exe]" />
+        <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+
+        <WixVariable Id="WixUILicenseRtf" Value="CountDown.rtf" />
+
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="StartMenuFolder">
+                <Directory Id="BUZZNUTTDIR" Name="$(var.Company)">
+                    <Directory Id="MENUDIR" Name="$(var.ProductName)" />
+                </Directory>
+            </Directory>
+            <Directory Id="StartupFolder">
+            </Directory>
+            <Directory Id="$(var.PlatformProgramFilesFolder)">
+                <Directory Id="$(var.Company)_dir" Name="$(var.Company)">
+                    <Directory Id="INSTALLDIR" Name="$(var.ProductName)" />
+                </Directory>
+            </Directory>
+            <Directory Id="DesktopFolder" Name="Desktop" />
+        </Directory>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="ProductComponents" Directory="INSTALLDIR">
+            <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+            <!-- <Component Id="ProductComponent"> -->
+            <!-- TODO: Insert files, registry keys, and other resources here. -->
+            <!-- </Component> -->
+            <Component Id="CountDownApp.exe" Guid="5f442da1-a19f-45db-ac06-13dc16cbf395">
+                <File Id="CountDownApp.exe" Name="CountDownApp.exe" Source="$(var.CountDownApp_TargetDir)CountDownApp.exe">
+                    <Shortcut Id="ApplicationRunShortcut"
+                        Directory="StartupFolder"
+                        Name="$(var.ProductName) Application"
+                        Description="$(var.ProductDescription) Application - run your countdown timer."
+                        WorkingDirectory="StartupFolder"
+                        Icon="icon.ico"
+                        IconIndex="0" >
+                    </Shortcut>
+                    <Shortcut Id="AppShortcut" 
+                        Directory="MENUDIR"
+                        Name="CountDown App"
+                        WorkingDirectory="INSTALLDIR"
+                        Icon="icon.ico"
+                        IconIndex="0">
+                    </Shortcut>
+                </File>
+                <RegistryValue Root="HKCU" Key="Software\$(var.Company)\$(var.ProductName)\Startup" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+            <Component Id="Utilities.dll" Guid="6cfb9d28-c7b3-4656-af28-4c583f7c68a8">
+                <File Id="Utilities.dll" Name="Utilities.dll" Source="$(var.CountDownApp_TargetDir)Utilities.dll" />
+            </Component>
+            <Component Id="Newtonsoft.Json.dll" Guid="bb5ef1b0-29bf-485b-844d-11420092ba1e">
+                <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.CountDownApp_TargetDir)Newtonsoft.Json.dll" />
+            </Component>
+            <Component Id="CountDownConfig.exe" Guid="a87e50b7-c333-4b17-9889-2fa590a62e85">
+                <File Id="CountDownConfig.exe" Name="CountDownConfig.exe" Source="$(var.CountDownConfig_TargetDir)CountDownConfig.exe" >
+                    <Shortcut Id="DesktopConfigShortcut"
+                        Directory="DesktopFolder"
+                        Name="$(var.ProductName) Config"
+                        Description="$(var.ProductDescription) Config - configure your countdown timer."
+                        WorkingDirectory="DesktopFolder"
+                        Icon="icon.ico"
+                        IconIndex="0" />
+                    <Shortcut Id="ConfigShortcut" 
+                        Directory="MENUDIR"
+                        Name="CountDown Config"
+                        WorkingDirectory="INSTALLDIR"
+                        Icon="icon.ico"
+                        IconIndex="0">
+                    </Shortcut>
+                </File>
+                <RegistryValue Root="HKCU" Key="Software\$(var.Company)\$(var.ProductName)\Desktop" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+            <Component Id="CountDownConfig.exe.config" Guid="5145cf66-a624-4c65-94de-7d139025748c">
+                <File Id="CountDownConfig.exe.config" Name="CountDownConfig.exe.config" Source="$(var.CountDownConfig_TargetDir)CountDownConfig.exe.config" />
+            </Component>
+            <Component Id="CountDownApp.exe.config" Guid="a3849e5e-d0f8-4e05-ba72-5282c969e544">
+                <File Id="CountDownApp.exe.config" Name="CountDownApp.exe.config" Source="$(var.CountDownApp_TargetDir)CountDownApp.exe.config" />
+            </Component>
+            <Component Id="hourglass_icon.ico" Guid="9f5641a5-1610-46f1-bd01-f7ced3a5093c">
+                <File Id="hourglass_icon.ico" Name="hourglass_icon.ico" Source="$(var.CountDownApp_TargetDir)hourglass_icon.ico" />
+            </Component>
+        </ComponentGroup>
+        <ComponentGroup Id="Cleanup" Directory="BUZZNUTTDIR">
+            <Component Id="MenuCleanup" Guid="C8D64B7B-E228-42DE-B7B7-E7EBF006489C">
+                <RemoveFolder Id="RemoveAppShortcut" Directory="MENUDIR" On="uninstall" />
+                <RemoveFolder Id="RemoveConfigShortcut" Directory="BUZZNUTTDIR" On="uninstall" />
+                <RegistryValue Root="HKCU" Key="Software\$(var.Company)\$(var.ProductName)\MenuDir" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+</Wix>
